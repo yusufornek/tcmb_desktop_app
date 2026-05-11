@@ -5,10 +5,39 @@ namespace tcmb
 {
     public partial class Form1 : Form
     {
-        private static readonly string[] DovizKodlari = new[]
+        private sealed class DovizItem
         {
-            "USD", "AUD", "DKK", "EUR", "GBP", "CHF", "SEK", "CAD", "KWD", "NOK",
-            "SAR", "JPY", "BGN", "RON", "RUB", "CNY", "PKR", "QAR", "KRW", "AZN", "AED", "XDR"
+            public string Kod { get; }
+            public string Isim { get; }
+            public DovizItem(string kod, string isim) { Kod = kod; Isim = isim; }
+            public override string ToString() => $"{Kod} — {Isim}";
+        }
+
+        // TCMB'nin yayın sırasıyla 22 döviz (kod + Türkçe ad)
+        private static readonly DovizItem[] DovizListesi = new[]
+        {
+            new DovizItem("USD", "ABD DOLARI"),
+            new DovizItem("AUD", "AVUSTRALYA DOLARI"),
+            new DovizItem("DKK", "DANİMARKA KRONU"),
+            new DovizItem("EUR", "EURO"),
+            new DovizItem("GBP", "İNGİLİZ STERLİNİ"),
+            new DovizItem("CHF", "İSVİÇRE FRANGI"),
+            new DovizItem("SEK", "İSVEÇ KRONU"),
+            new DovizItem("CAD", "KANADA DOLARI"),
+            new DovizItem("KWD", "KUVEYT DİNARI"),
+            new DovizItem("NOK", "NORVEÇ KRONU"),
+            new DovizItem("SAR", "SUUDİ ARABİSTAN RİYALİ"),
+            new DovizItem("JPY", "JAPON YENİ"),
+            new DovizItem("BGN", "BULGAR LEVASI"),
+            new DovizItem("RON", "RUMEN LEYİ"),
+            new DovizItem("RUB", "RUS RUBLESİ"),
+            new DovizItem("CNY", "ÇİN YUANI"),
+            new DovizItem("PKR", "PAKİSTAN RUPİSİ"),
+            new DovizItem("QAR", "KATAR RİYALİ"),
+            new DovizItem("KRW", "GÜNEY KORE WONU"),
+            new DovizItem("AZN", "AZERBAYCAN MANATI"),
+            new DovizItem("AED", "BİRLEŞİK ARAP EMİRLİKLERİ DİRHEMİ"),
+            new DovizItem("XDR", "ÖZEL ÇEKME HAKKI (SDR)")
         };
 
         private readonly TcmbClient _tcmb = new();
@@ -21,8 +50,8 @@ namespace tcmb
 
         private async void Form1_Load(object? sender, EventArgs e)
         {
-            foreach (var kod in DovizKodlari)
-                lstDovizler.Items.Add(kod);
+            foreach (var d in DovizListesi)
+                lstDovizler.Items.Add(d);
             lstDovizler.SelectedIndex = 0;
 
             dtpTarih.MaxDate = DateTime.Today;
@@ -38,7 +67,7 @@ namespace tcmb
             }
             catch (Exception ex)
             {
-                lblStatus.Text = "DB hatası";
+                lblStatus.Text = "Veritabanı hatası";
                 MessageBox.Show(
                     "MySQL bağlantısı kurulamadı. Servisin çalıştığından ve root/12345 ile bağlanılabildiğinden emin olun.\n\n" + ex.Message,
                     "Veritabanı Hatası", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -51,14 +80,44 @@ namespace tcmb
         private void BuildGridColumns()
         {
             dgvKur.Columns.Clear();
-            dgvKur.Columns.Add("Tarih", "Tarih");
-            dgvKur.Columns.Add("Kod", "Döviz Kodu");
-            dgvKur.Columns.Add("Isim", "İsim");
-            dgvKur.Columns.Add("Birim", "Birim");
-            dgvKur.Columns.Add("DovizAlis", "Döviz Alış");
-            dgvKur.Columns.Add("DovizSatis", "Döviz Satış");
-            dgvKur.Columns.Add("EfektifAlis", "Efektif Alış");
-            dgvKur.Columns.Add("EfektifSatis", "Efektif Satış");
+
+            dgvKur.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Tarih",
+                HeaderText = "Tarih",
+                FillWeight = 12
+            });
+            dgvKur.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Kod",
+                HeaderText = "Kod",
+                FillWeight = 8
+            });
+            dgvKur.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Isim",
+                HeaderText = "Döviz İsmi",
+                FillWeight = 22
+            });
+            dgvKur.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Birim",
+                HeaderText = "Birim",
+                FillWeight = 8,
+                DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter }
+            });
+
+            var sayiStil = new DataGridViewCellStyle
+            {
+                Alignment = DataGridViewContentAlignment.MiddleRight,
+                Font = new Font("Segoe UI", 10F, FontStyle.Regular),
+                Padding = new Padding(8, 4, 12, 4)
+            };
+
+            dgvKur.Columns.Add(new DataGridViewTextBoxColumn { Name = "DovizAlis",    HeaderText = "Döviz Alış",    FillWeight = 12, DefaultCellStyle = sayiStil });
+            dgvKur.Columns.Add(new DataGridViewTextBoxColumn { Name = "DovizSatis",   HeaderText = "Döviz Satış",   FillWeight = 12, DefaultCellStyle = sayiStil });
+            dgvKur.Columns.Add(new DataGridViewTextBoxColumn { Name = "EfektifAlis",  HeaderText = "Efektif Alış",  FillWeight = 12, DefaultCellStyle = sayiStil });
+            dgvKur.Columns.Add(new DataGridViewTextBoxColumn { Name = "EfektifSatis", HeaderText = "Efektif Satış", FillWeight = 12, DefaultCellStyle = sayiStil });
         }
 
         private async Task Fill2025InBackgroundAsync()
@@ -76,7 +135,7 @@ namespace tcmb
 
             if (missing.Count == 0)
             {
-                SetStatus("2025 verileri hazır ✓", progressVisible: false);
+                SetStatus("2025 verileri hazır", progressVisible: false);
                 return;
             }
 
@@ -99,7 +158,7 @@ namespace tcmb
                 }
                 catch
                 {
-                    // tek bir günde hata varsa diğerlerini engelleme
+                    // tek bir günün hatası diğerlerini engellemesin
                 }
                 finally
                 {
@@ -110,7 +169,7 @@ namespace tcmb
             });
 
             await Task.WhenAll(tasks);
-            SetStatus("2025 verileri hazır ✓", progressVisible: false);
+            SetStatus("2025 verileri hazır", progressVisible: false);
         }
 
         private void SetStatus(string text, bool progressVisible, int? progressValue = null)
@@ -143,14 +202,15 @@ namespace tcmb
         private async void btnGoster_Click(object? sender, EventArgs e)
         {
             var tarih = dtpTarih.Value.Date;
-            var kod = lstDovizler.SelectedItem as string;
+            var secili = lstDovizler.SelectedItem as DovizItem;
 
-            if (string.IsNullOrEmpty(kod))
+            if (secili == null)
             {
                 MessageBox.Show("Lütfen listeden bir döviz seçin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
+            var kod = secili.Kod;
             dgvKur.Rows.Clear();
             btnGoster.Enabled = false;
 
@@ -171,7 +231,6 @@ namespace tcmb
                                 "Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             return;
                         }
-                        // DB'de henüz yok — TCMB'den canlı çek (arka plan dolumu o güne ulaşmamış olabilir)
                         var live = await _tcmb.FetchAsync(tarih);
                         if (live == null)
                         {
@@ -206,8 +265,8 @@ namespace tcmb
                 dgvKur.Rows.Add(
                     rate.Tarih.ToString("dd.MM.yyyy"),
                     rate.DovizKodu,
-                    rate.DovizIsim ?? "",
-                    rate.Birim,
+                    rate.DovizIsim ?? secili.Isim,
+                    rate.Birim.ToString(),
                     FormatDecimal(rate.DovizAlis),
                     FormatDecimal(rate.DovizSatis),
                     FormatDecimal(rate.EfektifAlis),
@@ -225,9 +284,12 @@ namespace tcmb
             }
         }
 
+        private static readonly System.Globalization.CultureInfo TrCulture =
+            System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
+
         private static string FormatDecimal(decimal? value)
         {
-            return value.HasValue ? value.Value.ToString("N4", System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) : "-";
+            return value.HasValue ? value.Value.ToString("N4", TrCulture) : "-";
         }
     }
 }

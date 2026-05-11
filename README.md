@@ -169,6 +169,29 @@ Veya Visual Studio üzerinden `tcmb.sln` açılıp F5 ile çalıştırılabilir.
 
 Mevcut sürümde MySQL kullanıcı adı ve şifresi kaynak kodda sabit (hardcoded) olarak tanımlıdır. Üretim ortamı veya kamuya açık depo kullanımı için bu değerlerin `appsettings.json`, ortam değişkenleri (`Environment.GetEnvironmentVariable`) veya Windows Credential Manager gibi bir yapılandırma kaynağına taşınması önerilir.
 
+## Sürüm Geçmişi
+
+### v2.0 — Arayüz İyileştirmesi
+
+Uygulama işlevsel olarak değişmedi; arayüz baştan tasarlandı.
+
+- TCMB kurum tonunda (#1A3A5C lacivert) üst banner ve uygulama başlığı eklendi.
+- Segoe UI tipografi ailesi uygulandı; başlıklar, etiketler ve veri alanları için tutarlı yazı tipi hiyerarşisi oluşturuldu.
+- Sol panel "Sorgu Parametreleri" ve sağ panel "Kur Bilgisi" olarak görsel olarak ayrıldı; her iki panel beyaz arkaplan, ince çerçeve ve iç boşluklarla kart görünümüne kavuştu.
+- DataGridView yeniden biçimlendirildi: lacivert başlık satırı, beyaz başlık yazısı, satır arası alternatif zebra renk, gizli kılavuz çizgileri, satır yüksekliği 36 piksel.
+- Sayısal sütunlar (Döviz Alış, Döviz Satış, Efektif Alış, Efektif Satış) sağa hizalandı ve `tr-TR` kültürü ile binlik ayraçlı 4 ondalık formatla gösteriliyor.
+- "Kuru Göster" butonu flat stil, lacivert dolgu ve hover renk değişimiyle yeniden tasarlandı.
+- ListBox öğeleri artık `USD — ABD DOLARI` biçiminde döviz kodu ve Türkçe ad ile birlikte gösteriliyor.
+- Filtre paneli `TableLayoutPanel` üzerine taşındı; pencere yeniden boyutlandırıldığında ListBox dikey olarak genişler, "Kuru Göster" butonu her durumda panelin altında konumlanmış kalır.
+- Form yeniden boyutlandırılabilir hale getirildi; minimum boyut 900x600 olarak sabitlendi.
+
+### v1.0 — İlk Sürüm
+
+- TCMB XML kur dosyalarından veri çekme.
+- MySQL üzerinde 2025 verisi önbellekleme.
+- Tarih ve döviz koduna göre Döviz Alış / Döviz Satış / Efektif Alış / Efektif Satış görüntüleme.
+- Hafta sonu ve resmi tatil günleri için bilgilendirme.
+
 ## Lisans
 
 Bu uygulama eğitim amaçlı geliştirilmiştir. TCMB tarafından yayınlanan kur verileri kamuya açıktır; veri kullanımına ilişkin TCMB'nin yayın koşulları geçerlidir.
